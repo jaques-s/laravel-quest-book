@@ -18,9 +18,7 @@ return new class extends Migration
             $table->timestamps();
             $table->text('answer');
             $table->integer('author')->unsigned();
-//            $table->foreign('author')->references('id')->on('users');
             $table->integer('review')->unsigned();
-//            $table->foreign('review')->references('id')->on('reviews');
         });
     }
 

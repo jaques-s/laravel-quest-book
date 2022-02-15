@@ -2,62 +2,46 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Helpers\ApiHelpers;
+use App\Models\Answer;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class ReviewAnswerController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
-    }
+    use ApiHelpers;
 
     /**
-     * Store a newly created resource in storage.
+     * create a new answer for review
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @param $reviewId
+     * @return JsonResponse
      */
-    public function store(Request $request)
+    public function createAnswer(Request $request, $reviewId): JsonResponse
     {
-        //
-    }
+        $user = $request->user();
+        if ($this->isAdmin($user)) {
+            $review = DB::table('reviews')->where('id', $reviewId)->first();
+            if (empty($review)) {
+                return $this->onError(404, 'Review Not Found');
+            }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
+            $validator = Validator::make($request->all(), $this->answerValidationRules());
+            if ($validator->passes()) {
+                $review = new Answer();
+                $review->answer = $request->input('answer');
+                $review->author = $user->id;
+                $review->review = (int)$reviewId;
+                $review->save();
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
+                return $this->onSuccess($review, 'Answer Created');
+            }
+            return $this->onError(400, $validator->errors());
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
+        return $this->onError(401, 'Unauthorized Access');
     }
 }

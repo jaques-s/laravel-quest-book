@@ -2,62 +2,126 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Helpers\ApiHelpers;
+use App\Models\Review;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class ReviewController extends Controller
 {
+    use ApiHelpers;
+
     /**
-     * Display a listing of the resource.
+     * get reviews
      *
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function index()
+    public function reviews(Request $request): JsonResponse
     {
-        //
+        $user = $request->user();
+        if ($this->isAdmin($user) || $this->isWriter($user)) {
+            $review = DB::table('reviews')->get();
+            return $this->onSuccess($review, 'Review Retrieved');
+        }
+
+        return $this->onError(401, 'Unauthorized Access');
     }
 
     /**
-     * Store a newly created resource in storage.
+     * get one review
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @param $id
+     * @return JsonResponse
      */
-    public function store(Request $request)
+    public function oneReview(Request $request, $id): JsonResponse
     {
-        //
+        $user = $request->user();
+        if ($this->isAdmin($user) || $this->isWriter($user)) {
+            $review = DB::table('reviews')->where('id', $id)->first();
+            if (!empty($review)) {
+                return $this->onSuccess($review, 'Review Retrieved');
+            }
+            return $this->onError(404, 'Review Not Found');
+        }
+        return $this->onError(401, 'Unauthorized Access');
     }
 
     /**
-     * Display the specified resource.
+     * create a new review
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function show($id)
+    public function createReview(Request $request): JsonResponse
     {
-        //
+        $user = $request->user();
+        if ($this->isAdmin($user) || $this->isWriter($user)) {
+            $validator = Validator::make($request->all(), $this->reviewValidationRules());
+            if ($validator->passes()) {
+                $review = new Review();
+                $review->review = $request->input('review');
+                $review->author = $user->id;
+                $review->save();
+
+                return $this->onSuccess($review, 'Review Created');
+            }
+            return $this->onError(400, $validator->errors());
+        }
+
+        return $this->onError(401, 'Unauthorized Access');
     }
 
     /**
-     * Update the specified resource in storage.
+     * update review
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @param $id
+     * @return JsonResponse
      */
-    public function update(Request $request, $id)
+    public function updateReview(Request $request, $id): JsonResponse
     {
-        //
+        $user = $request->user();
+        if ($this->isAdmin($user) || $this->isWriter($user)) {
+            $validator = Validator::make($request->all(), $this->reviewValidationRules());
+            if ($validator->passes()) {
+                $review = Review::find($id);
+                if (empty($review)) {
+                    return $this->onError(404, 'Review Not Found');
+                }
+                $review->review = $request->input('review');
+                $review->author = $user->id;
+                $review->save();
+
+                return $this->onSuccess($review, 'Review Updated');
+            }
+            return $this->onError(400, $validator->errors());
+        }
+
+        return $this->onError(401, 'Unauthorized Access');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * delete review
      *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @param $id
+     * @return JsonResponse
      */
-    public function destroy($id)
+    public function deleteReview(Request $request, $id): JsonResponse
     {
-        //
+        $user = $request->user();
+        if ($this->isAdmin($user) || $this->isWriter($user)) {
+            $review = Review::find($id);
+            if (!empty($review)) {
+                $review->delete();
+                return $this->onSuccess($review, 'Review Deleted');
+            }
+            return $this->onError(404, 'Review Not Found');
+        }
+        return $this->onError(401, 'Unauthorized Access');
     }
 }
