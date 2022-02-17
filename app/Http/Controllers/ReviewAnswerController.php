@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Helpers\ApiHelpers;
 use App\Models\Answer;
+use App\Models\Review;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +25,7 @@ class ReviewAnswerController extends Controller
     {
         $user = $request->user();
         if ($this->isAdmin($user)) {
-            $review = DB::table('reviews')->where('id', $reviewId)->first();
+            $review = Review::find($reviewId);
             if (empty($review)) {
                 return $this->onError(404, 'Review Not Found');
             }

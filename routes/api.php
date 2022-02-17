@@ -28,11 +28,11 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     // удалить пользователя
     Route::delete('/users/{id}', [UserController::class, 'deleteUser']);
 
-    Route::get('/reviews', function () {
-        return Review::paginate(5);
-    });
+//    Route::get('/reviews', function () {
+//        return Review::paginate(5);
+//    });
 
-//    Route::get('/reviews', [ReviewController::class, 'reviews']);
+    Route::get('/reviews', [ReviewController::class, 'reviews']);
     Route::get('/reviews/{id}', [ReviewController::class, 'oneReview']);
     Route::post('/reviews', [ReviewController::class, 'createReview']);
     Route::put('/reviews/{id}', [ReviewController::class, 'updateReview']);

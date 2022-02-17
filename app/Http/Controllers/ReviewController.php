@@ -6,7 +6,6 @@ use App\Http\Helpers\ApiHelpers;
 use App\Models\Review;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ReviewController extends Controller
@@ -23,7 +22,7 @@ class ReviewController extends Controller
     {
         $user = $request->user();
         if ($this->isAdmin($user) || $this->isWriter($user)) {
-            $review = DB::table('reviews')->get();
+            $review = Review::with('answers')->get();
             return $this->onSuccess($review, 'Review Retrieved');
         }
 
@@ -41,7 +40,7 @@ class ReviewController extends Controller
     {
         $user = $request->user();
         if ($this->isAdmin($user) || $this->isWriter($user)) {
-            $review = DB::table('reviews')->where('id', $id)->first();
+            $review = Review::with('answers')->find($id);
             if (!empty($review)) {
                 return $this->onSuccess($review, 'Review Retrieved');
             }
