@@ -12,6 +12,8 @@ class ReviewController extends Controller
 {
     use ApiHelpers;
 
+    private int $reviewsOnPage = 5;
+
     /**
      * get reviews
      *
@@ -22,7 +24,11 @@ class ReviewController extends Controller
     {
         $user = $request->user();
         if ($this->isAdmin($user) || $this->isWriter($user)) {
-            $review = Review::with('answers')->get();
+            $reviewPageCount = $this->reviewsOnPage;
+            if ($request->query->get('per_page') > 0) {
+                $reviewPageCount = $request->query->get('per_page');
+            }
+            $review = Review::with('answers')->simplePaginate($reviewPageCount);
             return $this->onSuccess($review, 'Review Retrieved');
         }
 
